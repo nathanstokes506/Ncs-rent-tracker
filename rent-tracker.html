@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="NCS Rent Tracker">
+<title>NCS Rent Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#c8102e;--red2:#a50d25;--red3:#e8192f;
+  --black:#1a1a1a;--black2:#111111;--black3:#2a2a2a;
+  --gray:#3d3d3d;--gray2:#555;--gray3:#888;
+  --silver:#e8e8e8;--white:#ffffff;--yellow:#ffd200;
+  --blue:#1a6bbf;--ncs:#1a6bbf;--personal:#c8860a;
+  --radius:10px;--radius-sm:7px;
+  --shadow:0 2px 10px rgba(0,0,0,.22);--shadow-lg:0 8px 32px rgba(0,0,0,.35);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Helvetica Neue',sans-serif;background:var(--black2);color:var(--white);font-size:15px}
+.shell{display:flex;height:100vh;height:100dvh}
+/* Sidebar */
+.sidebar{width:230px;background:var(--black2);flex-shrink:0;display:flex;flex-direction:column;border-right:3px solid var(--red);overflow-y:auto}
+.sidebar-logo{background:var(--red);padding:max(env(safe-area-inset-top),20px) 18px 18px;display:flex;align-items:center;gap:11px}
+.nav-section{padding:16px 14px 4px;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--gray3)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:var(--radius-sm);color:rgba(255,255,255,.5);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin:2px 8px;border:none;background:none;width:calc(100% - 16px);text-align:left;-webkit-tap-highlight-color:transparent}
+.nav-item:hover,.nav-item:active{color:rgba(255,255,255,.85);background:rgba(255,255,255,.07)}
+.nav-item.active{color:var(--white);background:var(--red)}
+.nav-icon{width:18px;height:18px;flex-shrink:0;opacity:.75}
+.nav-item.active .nav-icon{opacity:1}
+.sidebar-bottom{margin-top:auto;padding:12px 8px 24px;border-top:1px solid var(--gray)}
+/* Main */
+.main{flex:1;background:var(--black3);display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--black2);border-bottom:2px solid var(--red);padding:max(env(safe-area-inset-top),16px) 22px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.topbar-title{font-size:17px;font-weight:800;color:var(--white);text-transform:uppercase;letter-spacing:.2px}
+.topbar-sub{font-size:12px;color:var(--gray3);margin-top:2px;font-weight:500}
+.content{flex:1;overflow-y:auto;padding:20px 22px;padding-bottom:max(env(safe-area-inset-bottom),20px);-webkit-overflow-scrolling:touch}
+/* Bottom nav */
+@media(max-width:700px){
+  .shell{flex-direction:column}.sidebar{display:none}.bottom-nav{display:flex!important}
+  .stat-grid{grid-template-columns:1fr 1fr!important}
+  .tc-pay{grid-template-columns:1fr .85fr 28px!important}.ph{display:none!important}
+  .form-row{grid-template-columns:1fr!important}
+  .prop-grid{grid-template-columns:1fr!important}
+}
+.bottom-nav{display:none;background:var(--black2);border-top:2px solid var(--red);padding:8px 0 max(env(safe-area-inset-bottom),8px);flex-shrink:0}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border:none;background:none;color:rgba(255,255,255,.45);font-size:9px;font-weight:700;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bnav-item.active{color:var(--red)}
+.bnav-icon{width:20px;height:20px}
+/* Buttons */
+.btn{padding:10px 16px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;font-family:inherit;letter-spacing:.3px;text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.btn-primary{background:var(--red);color:var(--white)}.btn-primary:active{background:var(--red2)}
+.btn-ghost{background:none;color:var(--silver);border:1.5px solid var(--gray)}.btn-ghost:active{border-color:var(--red);color:var(--white)}
+.btn-snow{background:rgba(107,181,255,.15);color:#6bb5ff;border:1px solid rgba(107,181,255,.3)}
+.btn-grass{background:rgba(30,122,69,.2);color:#5dbb5d;border:1px solid rgba(30,122,69,.35)}
+.btn-ncs{background:rgba(26,107,191,.2);color:#5ba3f5;border:1px solid rgba(26,107,191,.3)}
+.btn-personal{background:rgba(200,134,10,.2);color:#f5c35b;border:1px solid rgba(200,134,10,.3)}
+.btn-sm{padding:8px 13px;font-size:12px}
+.btn-xs{padding:5px 10px;font-size:11px}
+.btn-icon{padding:7px 9px;border-radius:6px;background:var(--gray);border:none;color:var(--silver);cursor:pointer;font-size:13px;line-height:1;-webkit-tap-highlight-color:transparent}
+.btn-icon:active{background:var(--red);color:var(--white)}
+/* Stats */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stat{background:var(--black2);border-radius:var(--radius);padding:18px 18px 20px;border:1px solid var(--gray);position:relative;overflow:hidden}
+.stat-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--red)}
+.stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray3);margin-bottom:8px}
+.stat-val{font-size:24px;font-weight:800;letter-spacing:-1px;color:var(--white)}
+.stat-val.yel{color:var(--yellow)}
+.stat-sub{font-size:12px;color:var(--gray3);margin-top:4px;font-weight:500}
+/* Cards */
+.card{background:var(--black2);border-radius:var(--radius);border:1px solid var(--gray);box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.card-head{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--gray);gap:8px;flex-wrap:wrap}
+.card-head h2{font-size:12px;font-weight:800;color:var(--white);text-transform:uppercase;letter-spacing:.8px}
+/* Table */
+.tbl-head{display:grid;padding:10px 18px;background:var(--black3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3)}
+.tbl-row{display:grid;padding:13px 18px;align-items:center;border-bottom:1px solid rgba(255,255,255,.05)}
+.tbl-row:last-child{border-bottom:none}
+.tbl-row:active{background:rgba(200,16,46,.08)}
+.tc-pay{grid-template-columns:1.4fr .9fr .8fr .9fr .8fr 30px}
+.tc-svc{grid-template-columns:1fr 1fr 1fr 1fr 30px}
+.tc-unit{grid-template-columns:1fr 1.2fr 1fr .8fr 60px}
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:700;gap:4px;text-transform:uppercase;letter-spacing:.4px}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-green{background:rgba(34,139,34,.2);color:#5dbb5d;border:1px solid rgba(34,139,34,.3)}.b-green::before{background:#5dbb5d}
+.b-amber{background:rgba(255,210,0,.15);color:var(--yellow);border:1px solid rgba(255,210,0,.25)}.b-amber::before{background:var(--yellow)}
+.b-red{background:rgba(200,16,46,.2);color:#ff6b7a;border:1px solid rgba(200,16,46,.3)}.b-red::before{background:#ff6b7a}
+.b-gray{background:rgba(255,255,255,.07);color:var(--gray3);border:1px solid rgba(255,255,255,.1)}.b-gray::before{background:var(--gray3)}
+.b-snow{background:rgba(107,181,255,.15);color:#6bb5ff;border:1px solid rgba(107,181,255,.3)}.b-snow::before{background:#6bb5ff}
+.b-grass{background:rgba(30,122,69,.2);color:#5dbb5d;border:1px solid rgba(30,122,69,.3)}.b-grass::before{background:#5dbb5d}
+.b-ncs{background:rgba(26,107,191,.2);color:#5ba3f5;border:1px solid rgba(26,107,191,.3)}.b-ncs::before{background:#5ba3f5}
+.b-personal{background:rgba(200,134,10,.2);color:#f5c35b;border:1px solid rgba(200,134,10,.3)}.b-personal::before{background:#f5c35b}
+/* Owner pill */
+.owner-pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+.op-ncs{background:rgba(26,107,191,.25);color:#5ba3f5}
+.op-personal{background:rgba(200,134,10,.25);color:#f5c35b}
+/* Property cards */
+.prop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.prop-card{background:var(--black2);border-radius:var(--radius);border:1px solid var(--gray);padding:18px;position:relative;overflow:hidden;transition:border-color .15s}
+.prop-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--red)}
+.prop-card.ncs-prop::before{background:var(--ncs)}
+.prop-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.prop-name{font-size:18px;font-weight:800;color:var(--white);letter-spacing:-.3px}
+.prop-addr{font-size:12px;color:var(--gray3);margin-top:2px}
+.prop-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
+.prop-stat{background:var(--black3);border-radius:6px;padding:10px;text-align:center}
+.prop-stat-val{font-size:18px;font-weight:800;color:var(--white)}
+.prop-stat-lbl{font-size:9px;color:var(--gray3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;font-weight:600}
+.prop-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.prop-footer{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:8px}
+/* Alert */
+.alert{border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:18px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;border-left:3px solid}
+.alert-warn{background:rgba(255,210,0,.1);color:var(--yellow);border-color:var(--yellow)}
+/* Filter */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.filter-bar select{padding:9px 12px;border:1.5px solid var(--gray);border-radius:var(--radius-sm);font-size:13px;background:var(--black2);color:var(--white);font-family:inherit;outline:none;font-weight:500}
+.filter-bar select:focus{border-color:var(--red)}
+.filter-total{margin-left:auto;font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px}
+/* Charts */
+.chart-wrap{padding:16px 18px 10px}
+.chart-bars{display:flex;align-items:flex-end;gap:4px;height:100px;position:relative}
+.chart-bar-group{display:flex;flex-direction:column;align-items:center;gap:0;flex:1;min-width:0}
+.chart-bar{width:100%;border-radius:3px 3px 0 0;min-height:2px}
+.chart-bar-label{font-size:9px;color:var(--gray3);margin-top:5px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.chart-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gray3);font-weight:500}
+.chart-legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+/* YoY */
+.yoy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:16px}
+.yoy-card{background:var(--black2);border-radius:var(--radius);border:1px solid var(--gray);padding:14px 16px}
+.yoy-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);margin-bottom:6px}
+.yoy-val{font-size:20px;font-weight:800;color:var(--white);letter-spacing:-.5px}
+.yoy-change{font-size:12px;font-weight:600;margin-top:3px}
+.yoy-up{color:#5dbb5d}.yoy-down{color:#ff6b7a}.yoy-flat{color:var(--gray3)}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;justify-content:center;z-index:300;padding:0;backdrop-filter:blur(6px)}
+.modal{background:var(--black2);border-radius:18px 18px 0 0;border:1px solid var(--gray);border-bottom:none;padding:24px 22px;padding-bottom:max(env(safe-area-inset-bottom),24px);width:100%;max-width:600px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal-handle{width:36px;height:4px;background:var(--gray2);border-radius:2px;margin:0 auto 20px}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:20px;color:var(--white);text-transform:uppercase;letter-spacing:.5px;padding-bottom:14px;border-bottom:2px solid var(--red)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);margin-bottom:6px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:13px;border:1.5px solid var(--gray);border-radius:var(--radius-sm);font-size:16px;color:var(--white);font-family:inherit;outline:none;background:var(--black3);transition:border-color .15s;font-weight:500;-webkit-appearance:none}
+.form-group input:focus,.form-group select:focus{border-color:var(--red)}
+.form-group select option{background:var(--black2)}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;padding-top:10px}
+/* Misc */
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray3)}
+.empty-icon{font-size:32px;margin-bottom:8px;opacity:.4}
+.empty-state p{font-size:14px;margin-bottom:14px;font-weight:500}
+.tname{font-weight:600;font-size:14px;color:var(--white)}
+.sub{font-size:12px;color:var(--gray3);margin-top:1px;font-weight:500}
+.amount{font-variant-numeric:tabular-nums;font-weight:700;font-size:14px;color:var(--white)}
+.ph{}
+.section-divider{height:1px;background:var(--gray);margin:20px 0}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+/* Units list inside property */
+.unit-list-row{display:grid;grid-template-columns:60px 1fr 100px 100px 80px;gap:8px;align-items:center;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
+.unit-list-row:last-child{border-bottom:none}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div style="flex-shrink:0;display:flex;align-items:center;justify-content:center">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M4 16L16 5L28 16V28H20V20H12V28H4V16Z" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" fill="none"/></svg>
+      </div>
+      <div>
+        <div style="color:#fff;font-size:20px;font-weight:900;letter-spacing:1px;line-height:1">NCS</div>
+        <div style="color:rgba(255,255,255,.75);font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Property Management</div>
+      </div>
+    </div>
+    <div class="nav-section">Menu</div>
+    <button class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" id="nav-properties" onclick="switchTab('properties',this)">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18V8l7-5 7 5v10"/><path d="M8 18v-5h4v5"/></svg>
+      Properties
+    </button>
+    <button class="nav-item" id="nav-payments" onclick="switchTab('payments',this)">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="16" height="12" rx="2"/><path d="M2 8h16M6 13h3"/></svg>
+      Payments
+    </button>
+    <button class="nav-item" id="nav-trends" onclick="switchTab('trends',this)">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="2,14 7,8 11,11 18,4"/><polyline points="14,4 18,4 18,8"/></svg>
+      Trends
+    </button>
+    <button class="nav-item" id="nav-services" onclick="switchTab('services',this)">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17c2-4 4-6 7-6s5 2 7 6"/><circle cx="10" cy="7" r="3"/></svg>
+      Services
+    </button>
+    <div class="sidebar-bottom">
+      <button class="nav-item" onclick="exportData()">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 14v3h12v-3M10 3v10m-4-4 4 4 4-4"/></svg>
+        Export to CSV
+      </button>
+      <button class="nav-item" onclick="saveBackup()" style="color:rgba(255,255,255,.6)">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 13h6M10 7v6"/></svg>
+        Save Backup
+      </button>
+      <button class="nav-item" onclick="loadBackup()" style="color:rgba(255,255,255,.6)">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M10 13V7m-3 3 3-3 3 3"/></svg>
+        Load Backup
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub"> </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap" id="topbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openPropertyModal()">+ Property</button>
+        <button class="btn btn-primary btn-sm" onclick="openPaymentModal()">+ Payment</button>
+      </div>
+    </div>
+    <div class="content">
+      <div id="tab-dashboard"></div>
+      <div id="tab-properties" style="display:none"></div>
+      <div id="tab-payments" style="display:none"></div>
+      <div id="tab-trends" style="display:none"></div>
+      <div id="tab-services" style="display:none"></div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="bnav-item active" id="bnav-dashboard" onclick="switchTab('dashboard',document.getElementById('nav-dashboard'));updateBnav('dashboard')">
+      <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
+      Dash
+    </button>
+    <button class="bnav-item" id="bnav-properties" onclick="switchTab('properties',document.getElementById('nav-properties'));updateBnav('properties')">
+      <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18V8l7-5 7 5v10"/><path d="M8 18v-5h4v5"/></svg>
+      Props
+    </button>
+    <button class="bnav-item" id="bnav-payments" onclick="switchTab('payments',document.getElementById('nav-payments'));updateBnav('payments')">
+      <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="16" height="12" rx="2"/><path d="M2 8h16"/></svg>
+      Pay
+    </button>
+    <button class="bnav-item" id="bnav-trends" onclick="switchTab('trends',document.getElementById('nav-trends'));updateBnav('trends')">
+      <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="2,14 7,8 11,11 18,4"/></svg>
+      Trends
+    </button>
+    <button class="bnav-item" id="bnav-services" onclick="switchTab('services',document.getElementById('nav-services'));updateBnav('services')">
+      <svg class="bnav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17c2-4 4-6 7-6s5 2 7 6"/><circle cx="10" cy="7" r="3"/></svg>
+      Svc
+    </button>
+  </nav>
+</div>
+
+<!-- Property Modal -->
+<div class="modal-bg" id="property-modal" style="display:none" onclick="bgClose(event,'property-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="prop-modal-title">Add Property</div>
+    <div class="form-row">
+      <div class="form-group"><label>Property Name</label><input type="text" id="pr-name" placeholder="Cedar"></div>
+      <div class="form-group"><label>Number of Units</label><input type="number" id="pr-units" placeholder="6" min="1" max="50" inputmode="numeric"></div>
+    </div>
+    <div class="form-group"><label>Address (optional)</label><input type="text" id="pr-addr" placeholder="123 Cedar St" autocomplete="off"></div>
+    <div class="form-group">
+      <label>Ownership</label>
+      <select id="pr-owner">
+        <option value="Personal">Personal</option>
+        <option value="NCS">NCS (Business)</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Default Rent Per Unit ($)</label><input type="number" id="pr-rent" placeholder="0 — fill in later" step="0.01" inputmode="decimal"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('property-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProperty()">Save Property</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unit Edit Modal -->
+<div class="modal-bg" id="unit-modal" style="display:none" onclick="bgClose(event,'unit-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="unit-modal-title">Edit Unit</div>
+    <div class="form-row">
+      <div class="form-group"><label>Unit #</label><input type="text" id="um-num" placeholder="1"></div>
+      <div class="form-group"><label>Monthly Rent ($)</label><input type="number" id="um-rent" placeholder="1200" inputmode="decimal"></div>
+    </div>
+    <div class="form-group"><label>Tenant Name</label><input type="text" id="um-tenant" placeholder="Full name" autocomplete="name"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Lease Start</label><input type="date" id="um-start"></div>
+      <div class="form-group"><label>Lease End</label><input type="date" id="um-end"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" id="um-email" placeholder="tenant@email.com" inputmode="email"></div>
+      <div class="form-group"><label>Phone</label><input type="tel" id="um-phone" placeholder="(506) 555-0100" inputmode="tel"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('unit-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUnit()">Save Unit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal-bg" id="payment-modal" style="display:none" onclick="bgClose(event,'payment-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="pay-modal-title">Record Payment</div>
+    <div class="form-row">
+      <div class="form-group"><label>Property</label><select id="pm-prop" onchange="populateUnitSelect()"></select></div>
+      <div class="form-group"><label>Unit</label><select id="pm-unit"></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="pm-amount" placeholder="1200.00" step="0.01" inputmode="decimal"></div>
+      <div class="form-group"><label>Date Received</label><input type="date" id="pm-date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>For Month</label><select id="pm-month"><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+      <div class="form-group"><label>Year</label><input type="number" id="pm-year" placeholder="2026" min="2020" max="2035" inputmode="numeric"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Method</label><select id="pm-method"><option>E-Transfer</option><option>Cash</option><option>Check</option><option>Direct Deposit</option><option>Money Order</option><option>Other</option></select></div>
+      <div class="form-group"><label>Status</label><select id="pm-status"><option value="Paid">Paid</option><option value="Partial">Partial</option><option value="Late">Late</option><option value="NSF">NSF</option></select></div>
+    </div>
+    <div class="form-group"><label>Notes</label><input type="text" id="pm-notes" placeholder="Check #1234, late fee waived…" autocomplete="off"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('payment-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePayment()">Save Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Service Modal -->
+<div class="modal-bg" id="service-modal" style="display:none" onclick="bgClose(event,'service-modal')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="svc-modal-title">Log Service</div>
+    <div class="form-row">
+      <div class="form-group"><label>Property</label><select id="svc-prop"></select></div>
+      <div class="form-group"><label>Service Type</label><select id="svc-type"><option value="Plow">❄ Plow</option><option value="Mow">🌿 Mow</option><option value="Other">🔧 Other</option></select></div>
+    </div>
+    <div class="form-group"><label>Date</label><input type="date" id="svc-date"></div>
+    <div class="form-group"><label>Notes</label><input type="text" id="svc-notes" placeholder="Full driveway + walkway, rear lawn…" autocomplete="off"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('service-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveService()">Log Service</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_SHORT=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let activeTab='dashboard';
+
+let _db={properties:[],units:[],payments:[],services:[]};
+(function(){
+  try{
+    var keys={rt_properties:'properties',rt_units:'units',rt_payments:'payments',rt_services:'services'};
+    Object.keys(keys).forEach(function(k){var v=localStorage.getItem(k);if(v)_db[keys[k]]=JSON.parse(v);});
+  }catch(e){}
+})();
+
+function getData(){return _db;}
+function save(k,v){
+  var map={rt_properties:'properties',rt_units:'units',rt_payments:'payments',rt_services:'services'};
+  if(map[k])_db[map[k]]=v;
+  try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+}
+function saveBackup(){
+  var json=JSON.stringify(_db,null,2);
+  var blob=new Blob([json],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='ncs-data-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function loadBackup(){
+  var input=document.createElement('input');input.type='file';input.accept='.json';
+  input.onchange=function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var d=JSON.parse(ev.target.result);
+        _db={properties:d.properties||[],units:d.units||[],payments:d.payments||[],services:d.services||[]};
+        try{
+          localStorage.setItem('rt_properties',JSON.stringify(_db.properties));
+          localStorage.setItem('rt_units',JSON.stringify(_db.units));
+          localStorage.setItem('rt_payments',JSON.stringify(_db.payments));
+          localStorage.setItem('rt_services',JSON.stringify(_db.services));
+        }catch(ex){}
+        render();
+        alert('Loaded: '+_db.properties.length+' properties, '+_db.units.length+' units, '+_db.payments.length+' payments.');
+      }catch(err){alert('Could not read backup file.');}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function fmt$(n){return '$'+parseFloat(n||0).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function today(){return new Date().toISOString().slice(0,10);}
+function thisYear(){return new Date().getFullYear();}
+function thisMonth(){return MONTHS[new Date().getMonth()];}
+function initials(n){if(!n)return '?';var p=n.trim().split(' ');return(p[0][0]+(p[1]?p[1][0]:'')).toUpperCase();}
+function bgClose(e,id){if(e.target===e.currentTarget)closeModal(id);}
+function closeModal(id){document.getElementById(id).style.display='none';}
+
+function badge(s){
+  var m={Paid:'b-green',Partial:'b-amber',Late:'b-amber',NSF:'b-red',Outstanding:'b-red',Plow:'b-snow',Mow:'b-grass'};
+  return '<span class="badge '+(m[s]||'b-gray')+'">'+s+'</span>';
+}
+function ownerPill(o){
+  return '<span class="owner-pill '+(o==='NCS'?'op-ncs':'op-personal')+'">'+(o==='NCS'?'NCS':'Personal')+'</span>';
+}
+function propName(pid){var p=getData().properties.find(function(x){return x.id===pid;});return p?p.name:'?';}
+
+function updateBnav(tab){
+  document.querySelectorAll('.bnav-item').forEach(function(b){b.classList.remove('active');});
+  var el=document.getElementById('bnav-'+tab);if(el)el.classList.add('active');
+}
+
+function switchTab(tab,el){
+  activeTab=tab;
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  if(el)el.classList.add('active');
+  ['dashboard','properties','payments','trends','services'].forEach(function(t){
+    document.getElementById('tab-'+t).style.display=(t===tab)?'':'none';
+  });
+  var titles={dashboard:'Dashboard',properties:'Properties',payments:'Payment History',trends:'Trends',services:'Services'};
+  document.getElementById('topbar-title').textContent=titles[tab];
+  var ta=document.getElementById('topbar-actions');
+  if(tab==='services'){
+    ta.innerHTML='';
+    var b1=document.createElement('button');b1.className='btn btn-snow btn-sm';b1.textContent='Plow';b1.onclick=function(){openServiceModal(null,'Plow');};ta.appendChild(b1);
+    var b2=document.createElement('button');b2.className='btn btn-grass btn-sm';b2.textContent='Mow';b2.onclick=function(){openServiceModal(null,'Mow');};ta.appendChild(b2);
+  } else if(tab==='trends'){
+    ta.innerHTML='';
+  } else if(tab==='properties'){
+    ta.innerHTML='<button class="btn btn-primary btn-sm" onclick="openPropertyModal()">+ Property</button>';
+  } else {
+    ta.innerHTML='<button class="btn btn-ghost btn-sm" onclick="openPropertyModal()">+ Property</button><button class="btn btn-primary btn-sm" onclick="openPaymentModal()">+ Payment</button>';
+  }
+  render();
+}
+
+function render(){
+  renderDashboard();
+  if(activeTab==='properties')renderProperties();
+  if(activeTab==='payments')renderPayments();
+  if(activeTab==='trends')renderTrends();
+  if(activeTab==='services')renderServices();
+}
+
+function el(tag,cls,html,style){
+  var e=document.createElement(tag);
+  if(cls)e.className=cls;
+  if(html)e.innerHTML=html;
+  if(style)e.setAttribute('style',style);
+  return e;
+}
+function setText(id,text){var e=document.getElementById(id);if(e)e.textContent=text;}
+function setHTML(id,html){var e=document.getElementById(id);if(e)e.innerHTML=html;}
+
+// ── Dashboard ──
+function renderDashboard(){
+  var d=getData(),mo=thisMonth(),yr=thisYear();
+  var props=d.properties,units=d.units,pays=d.payments,svcs=d.services;
+  var moPays=pays.filter(function(p){return p.month===mo&&p.year==yr;});
+  var collected=moPays.reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+  var expected=units.reduce(function(s,u){return s+(parseFloat(u.rent)||0);},0);
+  var outstanding=Math.max(0,expected-collected);
+  var paidIds=new Set(moPays.filter(function(p){return p.status==='Paid';}).map(function(p){return p.unitId;}));
+  var overdueCount=units.filter(function(u){return !paidIds.has(u.id);}).length;
+  setText('topbar-sub',props.length+' properties \u00b7 '+units.length+' units \u00b7 '+mo+' '+yr);
+
+  var personalPropIds=new Set(props.filter(function(p){return p.owner==='Personal';}).map(function(p){return p.id;}));
+  var ncsPropIds=new Set(props.filter(function(p){return p.owner==='NCS';}).map(function(p){return p.id;}));
+  var pUnitIds=new Set(units.filter(function(u){return personalPropIds.has(u.propId);}).map(function(u){return u.id;}));
+  var nUnitIds=new Set(units.filter(function(u){return ncsPropIds.has(u.propId);}).map(function(u){return u.id;}));
+  var pCol=moPays.filter(function(p){return pUnitIds.has(p.unitId);}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+  var nCol=moPays.filter(function(p){return nUnitIds.has(p.unitId);}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+
+  var months6=[];
+  for(var i=5;i>=0;i--){var dd=new Date();dd.setMonth(dd.getMonth()-i);months6.push({month:MONTHS[dd.getMonth()],year:dd.getFullYear(),label:MONTHS_SHORT[dd.getMonth()]});}
+  var maxVal=Math.max.apply(null,months6.map(function(m){return pays.filter(function(p){return p.month===m.month&&p.year==m.year;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);}).concat([1]));
+  var chartBars=months6.map(function(m){
+    var tot=pays.filter(function(p){return p.month===m.month&&p.year==m.year;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+    var h=Math.round((tot/maxVal)*90);
+    var isCur=(m.month===mo&&m.year===yr);
+    return '<div class="chart-bar-group"><div class="chart-bar" style="height:'+Math.max(h,2)+'px;background:'+(isCur?'var(--red)':'rgba(200,16,46,.35)')+'"></div><div class="chart-bar-label">'+m.label+'</div></div>';
+  }).join('');
+
+  var recent=pays.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,6);
+  var recentSvc=svcs.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,4);
+
+  var tab=document.getElementById('tab-dashboard');
+  tab.innerHTML='';
+
+  if(overdueCount>0){
+    var alert=el('div','alert alert-warn');
+    alert.innerHTML='<div style="width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0"></div>'+overdueCount+' unit'+(overdueCount!==1?'s':'')+' missing paid record for '+mo;
+    tab.appendChild(alert);
+  }
+
+  // Stats
+  var sg=el('div','stat-grid');
+  sg.innerHTML=
+    '<div class="stat"><div class="stat-bar"></div><div class="stat-label">Collected \u2014 '+mo+'</div><div class="stat-val">'+fmt$(collected)+'</div><div class="stat-sub">of '+fmt$(expected)+' expected</div></div>'+
+    '<div class="stat"><div class="stat-bar" style="background:var(--yellow)"></div><div class="stat-label">Outstanding</div><div class="stat-val'+(outstanding>0?' yel':'')+'">'+fmt$(outstanding)+'</div><div class="stat-sub">'+(outstanding>0?overdueCount+' unit'+(overdueCount!==1?'s':''):'All clear')+'</div></div>'+
+    '<div class="stat"><div class="stat-bar" style="background:var(--silver)"></div><div class="stat-label">Properties</div><div class="stat-val">'+props.length+'</div><div class="stat-sub">'+units.length+' total units</div></div>';
+  tab.appendChild(sg);
+
+  // Owner split
+  var os=el('div',null,null,'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px');
+  os.innerHTML=
+    '<div class="stat" style="border-color:rgba(200,134,10,.4)"><div class="stat-bar" style="background:var(--personal)"></div><div class="stat-label">Personal \u2014 '+mo+'</div><div class="stat-val" style="font-size:20px">'+fmt$(pCol)+'</div><div class="stat-sub">'+props.filter(function(p){return p.owner==='Personal';}).length+' properties</div></div>'+
+    '<div class="stat" style="border-color:rgba(26,107,191,.4)"><div class="stat-bar" style="background:var(--ncs)"></div><div class="stat-label">NCS \u2014 '+mo+'</div><div class="stat-val" style="font-size:20px">'+fmt$(nCol)+'</div><div class="stat-sub">'+props.filter(function(p){return p.owner==='NCS';}).length+' properties</div></div>';
+  tab.appendChild(os);
+
+  // Charts row
+  var cr=el('div',null,null,'display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:16px');
+  var cc=el('div','card',null,'margin-bottom:0');
+  cc.innerHTML='<div class="card-head"><h2>6-Month Collection</h2></div><div class="chart-wrap"><div class="chart-bars">'+chartBars+'</div></div>';
+  var sc=el('div','card',null,'margin-bottom:0');
+  var scHead='<div class="card-head"><h2>Recent Services</h2></div>';
+  if(recentSvc.length===0){
+    scHead+='<div class="empty-state" style="padding:20px"><p style="font-size:12px">No services yet.</p></div>';
+  } else {
+    recentSvc.forEach(function(s){scHead+='<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.05)"><div><div style="font-size:13px;font-weight:600">'+(s.type==='Plow'?'\u2744':'\U0001F33F')+' '+propName(s.propId)+'</div><div class="sub">'+s.date+'</div></div>'+badge(s.type)+'</div>';});
+  }
+  sc.innerHTML=scHead;
+  cr.appendChild(cc);cr.appendChild(sc);
+  tab.appendChild(cr);
+
+  // Recent payments
+  var pc=el('div','card');
+  var ph='<div class="card-head"><h2>Recent Payments</h2><button class="btn btn-primary btn-sm" onclick="openPaymentModal()">+ Payment</button></div>';
+  if(recent.length===0){
+    ph+='<div class="empty-state"><div class="empty-icon">\U0001F4B3</div><p>No payments yet.</p></div>';
+  } else {
+    ph+='<div class="tbl-head" style="grid-template-columns:1.4fr .9fr .8fr .9fr .8fr 30px;display:grid;padding:10px 18px;background:var(--black3);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3)"><div>Tenant</div><div class="ph">Property</div><div class="ph">Owner</div><div>Amount</div><div>Status</div><div></div></div>';
+    recent.forEach(function(p){
+      var u=units.find(function(u){return u.id===p.unitId;})||{};
+      var prop=props.find(function(x){return x.id===u.propId;})||{name:'?',owner:'?'};
+      ph+='<div class="tbl-row" style="grid-template-columns:1.4fr .9fr .8fr .9fr .8fr 30px">'
+        +'<div><div class="tname">'+(u.tenant||'\u2014')+'</div><div class="sub">'+prop.name+' Unit '+(u.num||'?')+'</div></div>'
+        +'<div class="ph sub">'+prop.name+'</div>'
+        +'<div class="ph">'+ownerPill(prop.owner)+'</div>'
+        +'<div class="amount">'+fmt$(p.amount)+'</div>'
+        +'<div>'+badge(p.status)+'</div>'
+        +'<div><button class="btn-icon" data-payid="'+p.id+'">\u2715</button></div>'
+        +'</div>';
+    });
+  }
+  pc.innerHTML=ph;
+  pc.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-payid]');
+    if(btn)deletePayment(btn.getAttribute('data-payid'));
+  });
+  tab.appendChild(pc);
+}
+
+// ── Properties ──
+function renderProperties(){
+  var d=getData(),mo=thisMonth(),yr=thisYear();
+  var props=d.properties,units=d.units,pays=d.payments,svcs=d.services;
+  var tab=document.getElementById('tab-properties');
+  tab.innerHTML='';
+  if(props.length===0){
+    tab.innerHTML='<div class="empty-state" style="padding-top:80px"><div class="empty-icon">\U0001F3E0</div><p>No properties yet.</p><button class="btn btn-primary" onclick="openPropertyModal()">Add first property</button></div>';
+    return;
+  }
+  var grid=document.createElement('div');grid.className='prop-grid';
+  props.forEach(function(prop){
+    var pu=units.filter(function(u){return u.propId===prop.id;});
+    var mp=pays.filter(function(p){return p.month===mo&&p.year==yr&&pu.some(function(u){return u.id===p.unitId;});});
+    var col=mp.reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+    var exp=pu.reduce(function(s,u){return s+(parseFloat(u.rent)||0);},0);
+    var paidCt=new Set(mp.filter(function(p){return p.status==='Paid';}).map(function(p){return p.unitId;})).size;
+    var plows=svcs.filter(function(s){return s.propId===prop.id&&s.type==='Plow'&&s.date.startsWith(yr);}).length;
+    var mows=svcs.filter(function(s){return s.propId===prop.id&&s.type==='Mow'&&s.date.startsWith(yr);}).length;
+    var uRows='';
+    pu.slice().sort(function(a,b){return parseInt(a.num)-parseInt(b.num);}).forEach(function(u){
+      var isPaid=mp.find(function(p){return p.unitId===u.id&&p.status==='Paid';});
+      uRows+='<div class="unit-list-row">'
+        +'<div style="font-size:13px;font-weight:800;color:var(--gray3)">#'+u.num+'</div>'
+        +'<div><div style="font-size:13px;font-weight:600">'+(u.tenant||'<em style="opacity:.4">Vacant</em>')+'</div>'+(u.email?'<div class="sub">'+u.email+'</div>':'')+'</div>'
+        +'<div class="amount" style="font-size:13px">'+(u.rent?fmt$(u.rent):'')+'</div>'
+        +'<div>'+(isPaid?badge('Paid'):badge('Outstanding'))+'</div>'
+        +'<div><button class="btn-icon" data-action="editUnit" data-id="'+u.id+'">&#9998;</button></div>'
+        +'</div>';
+    });
+    var card=document.createElement('div');
+    card.className='prop-card'+(prop.owner==='NCS'?' ncs-prop':'');
+    card.innerHTML=
+      '<div class="prop-card-top">'
+        +'<div><div class="prop-name">'+prop.name+'</div>'
+        +(prop.addr?'<div class="prop-addr">'+prop.addr+'</div>':'')
+        +'<div style="margin-top:6px">'+ownerPill(prop.owner)+'</div></div>'
+        +'<div style="display:flex;gap:6px">'
+          +'<button class="btn-icon" data-action="editProp" data-id="'+prop.id+'" title="Edit">&#9998;</button>'
+          +'<button class="btn-icon" data-action="transferOwner" data-id="'+prop.id+'" title="Transfer" style="font-size:11px">&#8644;</button>'
+          +'<button class="btn-icon" data-action="deleteProp" data-id="'+prop.id+'">&#10005;</button>'
+        +'</div></div>'
+      +'<div class="prop-stats">'
+        +'<div class="prop-stat"><div class="prop-stat-val">'+pu.length+'</div><div class="prop-stat-lbl">Units</div></div>'
+        +'<div class="prop-stat"><div class="prop-stat-val">'+paidCt+'/'+pu.length+'</div><div class="prop-stat-lbl">Paid '+mo.slice(0,3)+'</div></div>'
+        +'<div class="prop-stat"><div class="prop-stat-val" style="color:'+(col>=exp&&exp>0?'#5dbb5d':'var(--white)')+'">'+fmt$(col)+'</div><div class="prop-stat-lbl">Collected</div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:12px">'
+        +'<div style="flex:1;background:var(--black3);border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:800;color:#6bb5ff">'+plows+'</div><div style="font-size:9px;color:var(--gray3);text-transform:uppercase;font-weight:600">Plows '+yr+'</div></div>'
+        +'<div style="flex:1;background:var(--black3);border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:800;color:#5dbb5d">'+mows+'</div><div style="font-size:9px;color:var(--gray3);text-transform:uppercase;font-weight:600">Mows '+yr+'</div></div>'
+      +'</div>'
+      +'<div class="prop-actions">'
+        +'<button class="btn btn-snow btn-xs" data-action="logPlow" data-id="'+prop.id+'">&#10052; Plow</button>'
+        +'<button class="btn btn-grass btn-xs" data-action="logMow" data-id="'+prop.id+'">&#127807; Mow</button>'
+        +'<button class="btn btn-ghost btn-xs" data-action="addPayment" data-id="'+prop.id+'">+ Payment</button>'
+      +'</div>'
+      +'<div class="section-divider" style="margin:12px 0 8px"></div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray3);margin-bottom:8px">Units</div>'
+      +uRows;
+    card.addEventListener('click',function(e){
+      var btn=e.target.closest('[data-action]');if(!btn)return;
+      var a=btn.getAttribute('data-action'),id=btn.getAttribute('data-id');
+      if(a==='editProp')editProperty(id);
+      else if(a==='transferOwner')transferOwner(id);
+      else if(a==='deleteProp')deleteProperty(id);
+      else if(a==='logPlow')openServiceModal(id,'Plow');
+      else if(a==='logMow')openServiceModal(id,'Mow');
+      else if(a==='addPayment')openPaymentModal(id);
+      else if(a==='editUnit')openUnitEditModal(id);
+    });
+    grid.appendChild(card);
+  });
+  var addCard=document.createElement('div');
+  addCard.className='prop-card';
+  addCard.style.cssText='border-style:dashed;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;min-height:200px;color:var(--gray3)';
+  addCard.innerHTML='<div style="font-size:30px">+</div><div style="font-size:12px;font-weight:700;text-transform:uppercase">Add Property</div>';
+  addCard.onclick=function(){openPropertyModal();};
+  grid.appendChild(addCard);
+  tab.appendChild(grid);
+}
+
+// ── Payments ──
+function renderPayments(){
+  var d=getData();var props=d.properties,units=d.units,pays=d.payments;
+  var fp=document.getElementById('fp-prop')?document.getElementById('fp-prop').value:'all';
+  var fo=document.getElementById('fp-owner')?document.getElementById('fp-owner').value:'all';
+  var fy=document.getElementById('fp-year')?document.getElementById('fp-year').value:'all';
+  var fs=document.getElementById('fp-status')?document.getElementById('fp-status').value:'all';
+  var list=pays.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  if(fp!=='all')list=list.filter(function(p){var u=units.find(function(u){return u.id===p.unitId;});return u&&u.propId===fp;});
+  if(fo!=='all')list=list.filter(function(p){var u=units.find(function(u){return u.id===p.unitId;});var pr=u&&props.find(function(x){return x.id===u.propId;});return pr&&pr.owner===fo;});
+  if(fy!=='all')list=list.filter(function(p){return p.year==fy;});
+  if(fs!=='all')list=list.filter(function(p){return p.status===fs;});
+  var years=[...new Set(pays.map(function(p){return p.year;}))].sort(function(a,b){return b-a;});
+  var total=list.reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+  var tab=document.getElementById('tab-payments');
+  var fb='<div class="filter-bar">'
+    +'<select id="fp-prop" onchange="renderPayments()"><option value="all">All properties</option>'+props.map(function(p){return '<option value="'+p.id+'"'+(fp===p.id?' selected':'')+'>'+p.name+'</option>';}).join('')+'</select>'
+    +'<select id="fp-owner" onchange="renderPayments()"><option value="all">All owners</option><option value="Personal"'+(fo==='Personal'?' selected':'')+'>Personal</option><option value="NCS"'+(fo==='NCS'?' selected':'')+'>NCS</option></select>'
+    +'<select id="fp-year" onchange="renderPayments()"><option value="all">All years</option>'+years.map(function(y){return '<option value="'+y+'"'+(fy==y?' selected':'')+'>'+y+'</option>';}).join('')+'</select>'
+    +'<select id="fp-status" onchange="renderPayments()"><option value="all">All</option><option value="Paid">Paid</option><option value="Late">Late</option><option value="Partial">Partial</option><option value="NSF">NSF</option></select>'
+    +'<div class="filter-total">'+list.length+' \u00b7 '+fmt$(total)+'</div>'
+    +'</div>';
+  var rows='';
+  if(list.length===0){rows='<div class="empty-state"><div class="empty-icon">&#128269;</div><p>No payments match these filters.</p></div>';}
+  else{
+    rows='<div class="tbl-head tc-pay"><div>Tenant</div><div class="ph">Property</div><div class="ph">Owner</div><div>Amount</div><div>Status</div><div></div></div>';
+    list.forEach(function(p){
+      var u=units.find(function(u){return u.id===p.unitId;})||{};
+      var pr=props.find(function(x){return x.id===u.propId;})||{name:'?',owner:'?'};
+      rows+='<div class="tbl-row tc-pay">'
+        +'<div><div class="tname">'+(u.tenant||'\u2014')+'</div><div class="sub">'+pr.name+' #'+(u.num||'?')+' \u00b7 '+p.date+(p.notes?'<br><span style="font-size:11px">'+p.notes+'</span>':'')+'</div></div>'
+        +'<div class="ph sub">'+pr.name+'</div>'
+        +'<div class="ph">'+ownerPill(pr.owner)+'</div>'
+        +'<div class="amount">'+fmt$(p.amount)+'</div>'
+        +'<div>'+badge(p.status)+'</div>'
+        +'<div><button class="btn-icon" data-payid="'+p.id+'">&#10005;</button></div>'
+        +'</div>';
+    });
+  }
+  tab.innerHTML=fb+'<div class="card">'+rows+'</div>';
+  tab.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-payid]');
+    if(btn)deletePayment(btn.getAttribute('data-payid'));
+  },{once:true});
+}
+
+// ── Trends ──
+function renderTrends(){
+  var d=getData();var props=d.properties,units=d.units,pays=d.payments;
+  var yr=thisYear(),prevYr=yr-1;
+  var months12=[];
+  for(var i=11;i>=0;i--){var dd=new Date();dd.setMonth(dd.getMonth()-i);months12.push({month:MONTHS[dd.getMonth()],year:dd.getFullYear(),label:MONTHS_SHORT[dd.getMonth()]});}
+  var momData=months12.map(function(m){return {month:m.month,year:m.year,label:m.label,total:pays.filter(function(p){return p.month===m.month&&p.year==m.year;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0)};});
+  var momMax=Math.max.apply(null,momData.map(function(m){return m.total;}).concat([1]));
+  var yoyData=MONTHS_SHORT.map(function(label,i){
+    var mo=MONTHS[i];
+    return {label:label,mo:mo,
+      thisY:pays.filter(function(p){return p.month===mo&&p.year==yr;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0),
+      lastY:pays.filter(function(p){return p.month===mo&&p.year==prevYr;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0)
+    };
+  });
+  var yoyMax=Math.max.apply(null,yoyData.map(function(m){return Math.max(m.thisY,m.lastY);}).concat([1]));
+  var totalThis=pays.filter(function(p){return p.year==yr;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+  var totalLast=pays.filter(function(p){return p.year==prevYr;}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+  var pct=totalLast>0?Math.round((totalThis-totalLast)/totalLast*100):0;
+  var lateThis=pays.filter(function(p){return p.year==yr&&(p.status==='Late'||p.status==='NSF');}).length;
+  var countThis=pays.filter(function(p){return p.year==yr;}).length;
+  var pProps=props.filter(function(p){return p.owner==='Personal';});
+  var nProps=props.filter(function(p){return p.owner==='NCS';});
+  var pUIds=new Set(units.filter(function(u){return pProps.some(function(p){return p.id===u.propId;});}).map(function(u){return u.id;}));
+  var nUIds=new Set(units.filter(function(u){return nProps.some(function(p){return p.id===u.propId;});}).map(function(u){return u.id;}));
+  var pTot=pays.filter(function(p){return p.year==yr&&pUIds.has(p.unitId);}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+  var nTot=pays.filter(function(p){return p.year==yr&&nUIds.has(p.unitId);}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+
+  var h='<div class="yoy-grid">'
+    +'<div class="yoy-card"><div class="yoy-label">'+yr+' Total</div><div class="yoy-val">'+fmt$(totalThis)+'</div><div class="yoy-change '+(pct>0?'yoy-up':pct<0?'yoy-down':'yoy-flat')+'">'+(pct!==0?(pct>0?'\u2191':'\u2193')+' '+Math.abs(pct)+'% vs '+prevYr:'No prior data')+'</div></div>'
+    +'<div class="yoy-card"><div class="yoy-label">'+prevYr+' Total</div><div class="yoy-val">'+fmt$(totalLast)+'</div><div class="yoy-change yoy-flat">Prior year</div></div>'
+    +'<div class="yoy-card"><div class="yoy-label">Personal '+yr+'</div><div class="yoy-val">'+fmt$(pTot)+'</div><div class="yoy-change yoy-flat" style="color:#f5c35b">'+pProps.length+' properties</div></div>'
+    +'<div class="yoy-card"><div class="yoy-label">NCS '+yr+'</div><div class="yoy-val">'+fmt$(nTot)+'</div><div class="yoy-change yoy-flat" style="color:#5ba3f5">'+nProps.length+' properties</div></div>'
+    +'<div class="yoy-card"><div class="yoy-label">Avg / Month</div><div class="yoy-val">'+fmt$(totalThis/12)+'</div><div class="yoy-change yoy-flat">'+yr+' average</div></div>'
+    +'<div class="yoy-card"><div class="yoy-label">Late / NSF</div><div class="yoy-val">'+lateThis+'</div><div class="yoy-change yoy-flat">of '+countThis+' payments</div></div>'
+    +'</div>';
+  h+='<div class="card"><div class="card-head"><h2>Month-over-Month \u2014 Last 12 Months</h2></div><div class="chart-wrap"><div class="chart-bars" style="height:120px">';
+  momData.forEach(function(m){var hh=Math.round((m.total/momMax)*110),isCur=(m.month===thisMonth()&&m.year===yr);h+='<div class="chart-bar-group"><div class="chart-bar" style="height:'+Math.max(hh,2)+'px;background:'+(isCur?'var(--red)':'rgba(200,16,46,.4)')+'"></div><div class="chart-bar-label">'+m.label+'<br><span style="font-size:8px;color:var(--gray3)">'+m.year+'</span></div></div>';});
+  h+='</div></div></div>';
+  h+='<div class="card"><div class="card-head"><h2>Year-over-Year \u2014 '+prevYr+' vs '+yr+'</h2></div><div class="chart-wrap"><div class="chart-bars" style="height:120px">';
+  yoyData.forEach(function(m){var h1=Math.round((m.lastY/yoyMax)*110),h2=Math.round((m.thisY/yoyMax)*110);h+='<div class="chart-bar-group" style="flex-direction:row;align-items:flex-end;padding-bottom:18px;gap:2px"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:110px"><div class="chart-bar" style="width:100%;height:'+Math.max(h1,2)+'px;background:rgba(255,255,255,.2)"></div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:110px"><div class="chart-bar" style="width:100%;height:'+Math.max(h2,2)+'px;background:var(--red)"></div></div><div class="chart-bar-label" style="position:absolute;bottom:0;width:100%;text-align:center">'+m.label+'</div></div>';});
+  h+='</div><div class="chart-legend"><div class="chart-legend-item"><div class="chart-legend-dot" style="background:rgba(255,255,255,.2)"></div>'+prevYr+'</div><div class="chart-legend-item"><div class="chart-legend-dot" style="background:var(--red)"></div>'+yr+'</div></div></div></div>';
+  h+='<div class="card"><div class="card-head"><h2>Collection by Property \u2014 '+yr+'</h2></div>';
+  if(props.length===0){h+='<div class="empty-state"><p>No properties yet.</p></div>';}
+  else{props.forEach(function(prop){
+    var pu=units.filter(function(u){return u.propId===prop.id;});
+    var tot=pays.filter(function(p){return p.year==yr&&pu.some(function(u){return u.id===p.unitId;});}).reduce(function(s,p){return s+(parseFloat(p.amount)||0);},0);
+    var exp=pu.reduce(function(s,u){return s+(parseFloat(u.rent)||0);},0)*12;
+    var pct=exp>0?Math.min(Math.round(tot/exp*100),100):0;
+    h+='<div style="padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.05)"><div style="display:flex;justify-content:space-between;margin-bottom:5px;align-items:center"><span style="font-size:13px;font-weight:700">'+prop.name+'</span><div style="display:flex;align-items:center;gap:8px">'+ownerPill(prop.owner)+'<span class="amount">'+fmt$(tot)+'</span></div></div><div style="background:var(--black3);border-radius:3px;height:5px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+(prop.owner==='NCS'?'var(--ncs)':'var(--red)')+';border-radius:3px"></div></div><div style="font-size:11px;color:var(--gray3);margin-top:3px">'+pct+'% of '+fmt$(exp)+' expected</div></div>';
+  });}
+  h+='</div>';
+  document.getElementById('tab-trends').innerHTML=h;
+}
+
+// ── Services ──
+function renderServices(){
+  var d=getData();var props=d.properties,svcs=d.services;
+  var fp=document.getElementById('sv-prop')?document.getElementById('sv-prop').value:'all';
+  var ft=document.getElementById('sv-type')?document.getElementById('sv-type').value:'all';
+  var fy=document.getElementById('sv-year')?document.getElementById('sv-year').value:'all';
+  var list=svcs.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  if(fp!=='all')list=list.filter(function(s){return s.propId===fp;});
+  if(ft!=='all')list=list.filter(function(s){return s.type===ft;});
+  if(fy!=='all')list=list.filter(function(s){return s.date.startsWith(fy);});
+  var years=[...new Set(svcs.map(function(s){return s.date.slice(0,4);}))].sort(function(a,b){return b-a;});
+  var yr=thisYear();
+  var plows=svcs.filter(function(s){return s.type==='Plow'&&s.date.startsWith(yr);}).length;
+  var mows=svcs.filter(function(s){return s.type==='Mow'&&s.date.startsWith(yr);}).length;
+  var h='<div class="stat-grid">'
+    +'<div class="stat"><div class="stat-bar" style="background:#6bb5ff"></div><div class="stat-label">Plows \u2014 '+yr+'</div><div class="stat-val">'+plows+'</div><div class="stat-sub">service visits</div></div>'
+    +'<div class="stat"><div class="stat-bar" style="background:#5dbb5d"></div><div class="stat-label">Mows \u2014 '+yr+'</div><div class="stat-val">'+mows+'</div><div class="stat-sub">service visits</div></div>'
+    +'<div class="stat"><div class="stat-bar" style="background:var(--silver)"></div><div class="stat-label">Total \u2014 '+yr+'</div><div class="stat-val">'+(plows+mows)+'</div><div class="stat-sub">all services</div></div>'
+    +'</div>'
+    +'<div class="filter-bar">'
+    +'<select id="sv-prop" onchange="renderServices()"><option value="all">All properties</option>'+props.map(function(p){return '<option value="'+p.id+'"'+(fp===p.id?' selected':'')+'>'+p.name+'</option>';}).join('')+'</select>'
+    +'<select id="sv-type" onchange="renderServices()"><option value="all">All types</option><option value="Plow"'+(ft==='Plow'?' selected':'')+'>Plow</option><option value="Mow"'+(ft==='Mow'?' selected':'')+'>Mow</option><option value="Other">Other</option></select>'
+    +'<select id="sv-year" onchange="renderServices()"><option value="all">All years</option>'+years.map(function(y){return '<option value="'+y+'"'+(fy===y?' selected':'')+'>'+y+'</option>';}).join('')+'</select>'
+    +'<div class="filter-total">'+list.length+' record'+(list.length!==1?'s':'')+'</div>'
+    +'</div>'
+    +'<div class="card">';
+  if(list.length===0){
+    h+='<div class="empty-state"><div class="empty-icon">&#128295;</div><p>No services logged yet.</p></div>';
+  } else {
+    h+='<div class="tbl-head tc-svc"><div>Property</div><div class="ph">Owner</div><div>Type</div><div>Date</div><div></div></div>';
+    list.forEach(function(s){
+      var pr=props.find(function(p){return p.id===s.propId;})||{name:'?',owner:'?'};
+      h+='<div class="tbl-row tc-svc">'
+        +'<div><div class="tname">'+pr.name+'</div><div class="sub">'+(s.notes||'')+'</div></div>'
+        +'<div class="ph">'+ownerPill(pr.owner)+'</div>'
+        +'<div>'+badge(s.type)+'</div>'
+        +'<div class="sub">'+s.date+'</div>'
+        +'<div><button class="btn-icon" data-svcid="'+s.id+'">&#10005;</button></div>'
+        +'</div>';
+    });
+  }
+  h+='</div>';
+  var tab=document.getElementById('tab-services');
+  tab.innerHTML=h;
+  tab.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-svcid]');
+    if(btn)deleteService(btn.getAttribute('data-svcid'));
+  },{once:true});
+}
+
+// ── Property CRUD ──
+var editingPropId=null;
+function openPropertyModal(id){
+  editingPropId=id||null;
+  if(id){
+    var p=getData().properties.find(function(x){return x.id===id;});
+    if(p){document.getElementById('pr-name').value=p.name||'';document.getElementById('pr-addr').value=p.addr||'';document.getElementById('pr-owner').value=p.owner||'Personal';document.getElementById('pr-units').value='';document.getElementById('pr-rent').value='';document.getElementById('prop-modal-title').textContent='Edit Property';}
+  } else {
+    ['pr-name','pr-addr','pr-units','pr-rent'].forEach(function(i){document.getElementById(i).value='';});
+    document.getElementById('pr-owner').value='Personal';
+    document.getElementById('prop-modal-title').textContent='Add Property';
+  }
+  document.getElementById('property-modal').style.display='flex';
+}
+function editProperty(id){openPropertyModal(id);}
+function saveProperty(){
+  var d=getData();var properties=d.properties,units=d.units;
+  var name=document.getElementById('pr-name').value.trim();
+  var addr=document.getElementById('pr-addr').value.trim();
+  var owner=document.getElementById('pr-owner').value;
+  var numUnits=parseInt(document.getElementById('pr-units').value)||0;
+  var rent=document.getElementById('pr-rent').value;
+  if(!name){alert('Property name is required.');return;}
+  if(editingPropId){
+    var i=properties.findIndex(function(p){return p.id===editingPropId;});
+    if(i>=0)properties[i]=Object.assign({},properties[i],{name:name,addr:addr,owner:owner});
+    save('rt_properties',properties);
+  } else {
+    var propId=uid();
+    properties.push({id:propId,name:name,addr:addr,owner:owner});
+    save('rt_properties',properties);
+    for(var n=1;n<=numUnits;n++){
+      units.push({id:uid(),propId:propId,num:String(n),tenant:'',rent:rent||'',email:'',phone:'',start:'',end:''});
+    }
+    save('rt_units',units);
+  }
+  closeModal('property-modal');render();
+}
+function deleteProperty(id){
+  if(!confirm('Delete this property and ALL its units, payments, and service records?\n\nThis cannot be undone.'))return;
+  var d=getData();var properties=d.properties,units=d.units,payments=d.payments,services=d.services;
+  var propUnitIds=new Set(units.filter(function(u){return u.propId===id;}).map(function(u){return u.id;}));
+  save('rt_properties',properties.filter(function(p){return p.id!==id;}));
+  save('rt_units',units.filter(function(u){return u.propId!==id;}));
+  save('rt_payments',payments.filter(function(p){return !propUnitIds.has(p.unitId);}));
+  save('rt_services',services.filter(function(s){return s.propId!==id;}));
+  render();
+}
+function transferOwner(id){
+  var props=getData().properties;
+  var prop=props.find(function(p){return p.id===id;});if(!prop)return;
+  var newOwner=prop.owner==='NCS'?'Personal':'NCS';
+  if(!confirm('Transfer "'+prop.name+'" from '+prop.owner+' to '+newOwner+'?'))return;
+  prop.owner=newOwner;
+  save('rt_properties',props);render();
+}
+
+// ── Unit CRUD ──
+var editingUnitId=null;
+function openUnitEditModal(id){
+  editingUnitId=id;
+  var u=getData().units.find(function(x){return x.id===id;});if(!u)return;
+  document.getElementById('um-num').value=u.num||'';
+  document.getElementById('um-rent').value=u.rent||'';
+  document.getElementById('um-tenant').value=u.tenant||'';
+  document.getElementById('um-start').value=u.start||'';
+  document.getElementById('um-end').value=u.end||'';
+  document.getElementById('um-email').value=u.email||'';
+  document.getElementById('um-phone').value=u.phone||'';
+  var prop=getData().properties.find(function(p){return p.id===u.propId;});
+  document.getElementById('unit-modal-title').textContent='Edit Unit '+(prop?'\u2014 '+prop.name:'');
+  document.getElementById('unit-modal').style.display='flex';
+}
+function saveUnit(){
+  var units=getData().units;
+  var i=units.findIndex(function(u){return u.id===editingUnitId;});if(i<0)return;
+  units[i]=Object.assign({},units[i],{
+    num:document.getElementById('um-num').value.trim(),
+    rent:document.getElementById('um-rent').value,
+    tenant:document.getElementById('um-tenant').value.trim(),
+    start:document.getElementById('um-start').value,
+    end:document.getElementById('um-end').value,
+    email:document.getElementById('um-email').value,
+    phone:document.getElementById('um-phone').value
+  });
+  save('rt_units',units);closeModal('unit-modal');render();
+}
+
+// ── Payment CRUD ──
+function populateUnitSelect(){
+  var propId=document.getElementById('pm-prop').value;
+  var units=getData().units.filter(function(u){return u.propId===propId;}).sort(function(a,b){return parseInt(a.num)-parseInt(b.num);});
+  document.getElementById('pm-unit').innerHTML=units.map(function(u){return '<option value="'+u.id+'">Unit '+u.num+(u.tenant?' \u2014 '+u.tenant:'')+'</option>';}).join('');
+}
+function openPaymentModal(prefillPropId){
+  var d=getData();var props=d.properties;
+  if(props.length===0){alert('Add a property first.');return;}
+  var sel=document.getElementById('pm-prop');
+  sel.innerHTML=props.map(function(p){return '<option value="'+p.id+'">'+p.name+'</option>';}).join('');
+  if(prefillPropId)sel.value=prefillPropId;
+  populateUnitSelect();
+  document.getElementById('pm-amount').value='';
+  document.getElementById('pm-date').value=today();
+  document.getElementById('pm-month').value=thisMonth();
+  document.getElementById('pm-year').value=thisYear();
+  document.getElementById('pm-method').value='E-Transfer';
+  document.getElementById('pm-status').value='Paid';
+  document.getElementById('pm-notes').value='';
+  document.getElementById('pay-modal-title').textContent='Record Payment';
+  document.getElementById('payment-modal').style.display='flex';
+}
+function savePayment(){
+  var pays=getData().payments;
+  var unitId=document.getElementById('pm-unit').value;
+  var amount=document.getElementById('pm-amount').value;
+  var date=document.getElementById('pm-date').value;
+  var month=document.getElementById('pm-month').value;
+  var year=parseInt(document.getElementById('pm-year').value);
+  var method=document.getElementById('pm-method').value;
+  var status=document.getElementById('pm-status').value;
+  var notes=document.getElementById('pm-notes').value;
+  if(!unitId||!amount||!date){alert('Please fill in Unit, Amount, and Date.');return;}
+  pays.push({id:uid(),unitId:unitId,amount:amount,date:date,month:month,year:year,method:method,status:status,notes:notes});
+  save('rt_payments',pays);closeModal('payment-modal');render();
+}
+function deletePayment(id){
+  if(!confirm('Delete this payment?'))return;
+  save('rt_payments',getData().payments.filter(function(p){return p.id!==id;}));render();
+}
+
+// ── Service CRUD ──
+function openServiceModal(propId,type){
+  var props=getData().properties;
+  if(props.length===0){alert('Add a property first.');return;}
+  var sel=document.getElementById('svc-prop');
+  sel.innerHTML=props.map(function(p){return '<option value="'+p.id+'">'+p.name+'</option>';}).join('');
+  if(propId)sel.value=propId;
+  document.getElementById('svc-type').value=type||'Plow';
+  document.getElementById('svc-date').value=today();
+  document.getElementById('svc-notes').value='';
+  document.getElementById('svc-modal-title').textContent=(type==='Mow'?'Log Mow':'Log Plow');
+  document.getElementById('service-modal').style.display='flex';
+}
+function saveService(){
+  var svcs=getData().services;
+  var propId=document.getElementById('svc-prop').value;
+  var type=document.getElementById('svc-type').value;
+  var date=document.getElementById('svc-date').value;
+  var notes=document.getElementById('svc-notes').value;
+  if(!propId||!date){alert('Please fill in Property and Date.');return;}
+  svcs.push({id:uid(),propId:propId,type:type,date:date,notes:notes});
+  save('rt_services',svcs);closeModal('service-modal');render();
+}
+function deleteService(id){
+  if(!confirm('Delete this service record?'))return;
+  save('rt_services',getData().services.filter(function(s){return s.id!==id;}));render();
+}
+
+// ── Export ──
+function toCSV(rows){
+  return rows.map(function(r){return r.map(function(c){var s=String(c===null||c===undefined?'':c);return(s.indexOf(',')>=0||s.indexOf('"')>=0||s.indexOf('\n')>=0)?'"'+s.replace(/"/g,'""')+'"':s;}).join(',');}).join('\n');
+}
+function dlCSV(csv,filename){
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function exportData(){
+  var d=getData();var props=d.properties,units=d.units,pays=d.payments,svcs=d.services;
+  if(!pays.length&&!svcs.length){alert('No records to export yet.');return;}
+  var yr=thisYear();var delay=0;
+  ['Personal','NCS'].forEach(function(owner){
+    var ownerProps=props.filter(function(p){return p.owner===owner;});
+    if(ownerProps.length===0)return;
+    var ownerPropIds=new Set(ownerProps.map(function(p){return p.id;}));
+    var ownerUnitIds=new Set(units.filter(function(u){return ownerPropIds.has(u.propId);}).map(function(u){return u.id;}));
+    var ownerPays=pays.filter(function(p){return ownerUnitIds.has(p.unitId);});
+    var ownerSvcs=svcs.filter(function(s){return ownerPropIds.has(s.propId);});
+    if(ownerPays.length>0){
+      setTimeout(function(){
+        var rows=[['Date','Year','Month','Property','Unit','Tenant','Owner','Rent Expected','Amount Paid','Status','Method','Notes']];
+        ownerPays.slice().sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(p){
+          var u=units.find(function(u){return u.id===p.unitId;})||{};
+          var pr=props.find(function(x){return x.id===u.propId;})||{name:'',owner:''};
+          rows.push([p.date,p.year,p.month,pr.name,'Unit '+u.num,u.tenant||'',pr.owner,parseFloat(u.rent)||0,parseFloat(p.amount)||0,p.status,p.method||'',p.notes||'']);
+        });
+        dlCSV(toCSV(rows),'NCS-'+owner.toLowerCase()+'-payments-'+yr+'.csv');
+      },delay);delay+=400;
+    }
+    if(ownerSvcs.length>0){
+      setTimeout(function(){
+        var rows=[['Date','Property','Owner','Type','Notes']];
+        ownerSvcs.slice().sort(function(a,b){return a.date.localeCompare(b.date);}).forEach(function(s){
+          var pr=props.find(function(x){return x.id===s.propId;})||{name:'',owner:''};
+          rows.push([s.date,pr.name,pr.owner,s.type,s.notes||'']);
+        });
+        dlCSV(toCSV(rows),'NCS-'+owner.toLowerCase()+'-services-'+yr+'.csv');
+      },delay);delay+=400;
+    }
+  });
+  alert('Exporting separate files for Personal and NCS.\nCheck your Downloads/Files folder.');
+}
+
+// ── Seed data ──
+(function(){
+  if(_db.properties.length>0)return;
+  var seeds=[
+    {name:'Cedar',units:6},{name:'Houlton',units:4},{name:'Church',units:2},
+    {name:'Connell',units:4},{name:'St. James',units:1}
+  ];
+  seeds.forEach(function(s){
+    var propId=uid();
+    _db.properties.push({id:propId,name:s.name,addr:'',owner:'Personal'});
+    for(var n=1;n<=s.units;n++){
+      _db.units.push({id:uid(),propId:propId,num:String(n),tenant:'',rent:'',email:'',phone:'',start:'',end:''});
+    }
+  });
+  try{
+    localStorage.setItem('rt_properties',JSON.stringify(_db.properties));
+    localStorage.setItem('rt_units',JSON.stringify(_db.units));
+  }catch(e){}
+})();
+
+render();
+</script>
+</body>
+</html>
